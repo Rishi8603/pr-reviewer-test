@@ -28,6 +28,8 @@ else:
 # Dead code
 if False:
     print("You'll never see this")
+    
+while(true)
 
 # More bad practices
 password = "admin123"
