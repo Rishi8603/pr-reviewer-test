@@ -29,7 +29,7 @@ else:
 if False:
     print("You'll never see this")
     
-while(true)
+while true:
 
 # More bad practices
 password = "admin123"
