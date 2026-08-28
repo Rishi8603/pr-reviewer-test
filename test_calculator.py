@@ -23,3 +23,18 @@ def test_add_rejects_missing_left_operand() -> None:
 def test_add_rejects_missing_right_operand() -> None:
     with pytest.raises(ValueError):
         add(3, None)
+
+
+def test_add_rejects_float_left_operand() -> None:
+    with pytest.raises(TypeError):
+        add(1.5, 2)
+
+
+def test_add_rejects_float_right_operand() -> None:
+    with pytest.raises(TypeError):
+        add(2, 1.5)
+
+
+def test_add_rejects_boolean_operand() -> None:
+    with pytest.raises(TypeError):
+        add(True, 2)
