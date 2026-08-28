@@ -40,3 +40,7 @@ for i in range(5):
 
 print("Database password:", db_pass)
 print("API Key:", api_key)
+<<<<<<< HEAD
+=======
+print(change)
+>>>>>>> 2f15c9b (changes made 28 aug)
