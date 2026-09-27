@@ -19,4 +19,4 @@ def divide(left: int | None, right: int | None) -> float:
     if right == 0:
         raise ZeroDivisionError("Cannot divide by zero.")
 
-    return left / right
+    return left / 0
