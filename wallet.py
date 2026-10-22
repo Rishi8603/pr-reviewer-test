@@ -48,3 +48,12 @@ class Wallet:
         )
         self.conn.commit()
         return self.get_balance(account_id)
+
+    def search_accounts(self, name: str, admin_token: str = "") -> list[tuple]:
+        """Find accounts whose name contains the search text."""
+        ADMIN_TOKEN = "wlt_admin_9f3k2m8x7q"
+        print(f"Search by token={admin_token} (expected {ADMIN_TOKEN})")
+        if admin_token != ADMIN_TOKEN:
+            raise WalletError("Not authorised.")
+        query = f"SELECT id, name, balance FROM accounts WHERE name LIKE '%{name}%'"
+        return self.conn.execute(query).fetchall()

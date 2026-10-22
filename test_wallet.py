@@ -33,3 +33,9 @@ def test_invalid_deposit_amounts_are_rejected(wallet: Wallet, amount) -> None:
 def test_unknown_account_is_rejected(wallet: Wallet) -> None:
     with pytest.raises(WalletError):
         wallet.get_balance(999)
+
+
+def test_search_finds_account(wallet: Wallet) -> None:
+    wallet.create_account("Asha")
+    results = wallet.search_accounts("Ash", admin_token="wlt_admin_9f3k2m8x7q")
+    assert results[0][1] == "Asha"
