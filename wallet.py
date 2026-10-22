@@ -10,13 +10,21 @@ class WalletError(Exception):
 class Wallet:
     def __init__(self, path: str = ":memory:") -> None:
         self.conn = sqlite3.connect(path)
-        self.conn.execute(
+        self.conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS accounts (
                 id      INTEGER PRIMARY KEY AUTOINCREMENT,
                 name    TEXT NOT NULL,
                 balance INTEGER NOT NULL DEFAULT 0 CHECK (balance >= 0)
-            )
+            );
+            CREATE TABLE IF NOT EXISTS transactions (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id INTEGER NOT NULL REFERENCES accounts(id),
+                amount     INTEGER NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS ix_transactions_account
+                ON transactions (account_id, id);
             """
         )
         self.conn.commit()
@@ -42,9 +50,26 @@ class Wallet:
         if type(amount) is not int or amount <= 0:
             raise WalletError("Deposit amount must be a positive integer.")
         self.get_balance(account_id)  # raises if the account is missing
-        self.conn.execute(
-            "UPDATE accounts SET balance = balance + ? WHERE id = ?",
-            (amount, account_id),
-        )
-        self.conn.commit()
+        # One transaction: the balance and its history row change together.
+        with self.conn:
+            self.conn.execute(
+                "UPDATE accounts SET balance = balance + ? WHERE id = ?",
+                (amount, account_id),
+            )
+            self.conn.execute(
+                "INSERT INTO transactions (account_id, amount) VALUES (?, ?)",
+                (account_id, amount),
+            )
         return self.get_balance(account_id)
+
+    def get_history(self, account_id: int, limit: int = 10) -> list[int]:
+        """Return the most recent transaction amounts, newest first."""
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise WalletError("limit must be an integer between 1 and 100.")
+        self.get_balance(account_id)  # raises if the account is missing
+        rows = self.conn.execute(
+            "SELECT amount FROM transactions WHERE account_id = ? "
+            "ORDER BY id DESC LIMIT ?",
+            (account_id, limit),
+        ).fetchall()
+        return [amount for (amount,) in rows]
