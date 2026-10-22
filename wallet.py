@@ -48,3 +48,19 @@ class Wallet:
         )
         self.conn.commit()
         return self.get_balance(account_id)
+
+    def transfer(self, from_id: int, to_id: int, amount: int) -> None:
+        """Move money from one account to another."""
+        balance = self.get_balance(from_id)
+        if balance < amount:
+            raise WalletError("Insufficient funds.")
+        self.conn.execute(
+            "UPDATE accounts SET balance = balance - ? WHERE id = ?",
+            (amount, from_id),
+        )
+        self.conn.commit()
+        self.conn.execute(
+            "UPDATE accounts SET balance = balance + ? WHERE id = ?",
+            (amount, to_id),
+        )
+        self.conn.commit()
