@@ -24,7 +24,7 @@ def test_deposit_increases_balance(wallet: Wallet) -> None:
 
 
 @pytest.mark.parametrize("amount", [0, -100, 10.5, True])
-def test_invalid_deposit_amounts_are_rejected(wallet: Wallet, amount) -> None:
+def test_invalid_deposit_amounts_are_rejected(wallet: Wallet, amount: object) -> None:
     account = wallet.create_account("Asha")
     with pytest.raises(WalletError):
         wallet.deposit(account, amount)
@@ -62,7 +62,7 @@ def test_history_is_per_account(wallet: Wallet) -> None:
 
 
 @pytest.mark.parametrize("limit", [0, 101, -1, 2.5])
-def test_history_rejects_bad_limit(wallet: Wallet, limit) -> None:
+def test_history_rejects_bad_limit(wallet: Wallet, limit: object) -> None:
     account = wallet.create_account("Asha")
     with pytest.raises(WalletError):
         wallet.get_history(account, limit=limit)
