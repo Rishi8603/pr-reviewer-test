@@ -33,3 +33,25 @@ def test_invalid_deposit_amounts_are_rejected(wallet: Wallet, amount: object) ->
 def test_unknown_account_is_rejected(wallet: Wallet) -> None:
     with pytest.raises(WalletError):
         wallet.get_balance(999)
+
+
+def test_withdraw_decreases_balance(wallet: Wallet) -> None:
+    account = wallet.create_account("Asha")
+    wallet.deposit(account, 500)
+    assert wallet.withdraw(account, 200) == 300
+
+
+def test_withdraw_more_than_balance_is_rejected(wallet: Wallet) -> None:
+    account = wallet.create_account("Asha")
+    wallet.deposit(account, 100)
+    with pytest.raises(WalletError):
+        wallet.withdraw(account, 500)
+    assert wallet.get_balance(account) == 100
+
+
+@pytest.mark.parametrize("amount", [0, -100, 10.5, True])
+def test_invalid_withdraw_amounts_are_rejected(wallet: Wallet, amount: object) -> None:
+    account = wallet.create_account("Asha")
+    wallet.deposit(account, 500)
+    with pytest.raises(WalletError):
+        wallet.withdraw(account, amount)

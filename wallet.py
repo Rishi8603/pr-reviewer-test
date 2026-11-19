@@ -48,3 +48,17 @@ class Wallet:
         )
         self.conn.commit()
         return self.get_balance(account_id)
+
+    def withdraw(self, account_id: int, amount: int) -> int:
+        if type(amount) is not int or amount <= 0:
+            raise WalletError("Withdrawal amount must be a positive integer.")
+        self.get_balance(account_id)  # raises if the account is missing
+        cursor = self.conn.execute(
+            "UPDATE accounts SET balance = balance - ? WHERE id = ? AND balance >= ?",
+            (amount, account_id, amount),
+        )
+        if cursor.rowcount == 0:
+            self.conn.rollback()
+            raise WalletError("Insufficient balance.")
+        self.conn.commit()
+        return self.get_balance(account_id)
