@@ -1,5 +1,6 @@
 """A minimal SQLite-backed wallet: accounts and balances, stored in paise."""
 
+import os
 import sqlite3
 
 
@@ -8,7 +9,10 @@ class WalletError(Exception):
 
 
 class Wallet:
-    def __init__(self, path: str = ":memory:") -> None:
+    def __init__(
+        self, path: str = ":memory:", admin_token: str | None = None
+    ) -> None:
+        self._admin_token = admin_token or os.environ.get("WALLET_ADMIN_TOKEN")
         self.conn = sqlite3.connect(path)
         self.conn.executescript(
             """
@@ -61,6 +65,20 @@ class Wallet:
                 (account_id, amount),
             )
         return self.get_balance(account_id)
+
+    def search_accounts(self, name: str, admin_token: str = "") -> list[tuple]:
+        """Find accounts whose name contains the search text."""
+        if not self._admin_token or admin_token != self._admin_token:
+            raise WalletError("Not authorised.")
+
+        if not name or not name.strip():
+            return []
+
+        pattern = f"%{name.strip()}%"
+        return self.conn.execute(
+            "SELECT id, name, balance FROM accounts WHERE name LIKE ? ORDER BY id",
+            (pattern,),
+        ).fetchall()
 
     def get_history(self, account_id: int, limit: int = 10) -> list[int]:
         """Return the most recent transaction amounts, newest first."""

@@ -35,6 +35,43 @@ def test_unknown_account_is_rejected(wallet: Wallet) -> None:
         wallet.get_balance(999)
 
 
+def test_search_finds_account() -> None:
+    wallet = Wallet(admin_token="test-admin-token")
+    wallet.create_account("Asha")
+    results = wallet.search_accounts("Ash", admin_token="test-admin-token")
+    assert results[0][1] == "Asha"
+
+
+def test_search_rejects_unauthorized_token() -> None:
+    wallet = Wallet(admin_token="test-admin-token")
+    wallet.create_account("Asha")
+    with pytest.raises(WalletError):
+        wallet.search_accounts("Ash", admin_token="wrong-token")
+
+
+def test_search_blank_name_returns_empty_list() -> None:
+    wallet = Wallet(admin_token="test-admin-token")
+    wallet.create_account("Asha")
+    assert wallet.search_accounts("   ", admin_token="test-admin-token") == []
+
+
+def test_search_handles_special_characters_safely() -> None:
+    wallet = Wallet(admin_token="test-admin-token")
+    wallet.create_account("O'Reilly")
+    results = wallet.search_accounts("'Re", admin_token="test-admin-token")
+    assert [name for _, name, _ in results] == ["O'Reilly"]
+
+
+def test_search_is_parameterized_against_injection() -> None:
+    wallet = Wallet(admin_token="test-admin-token")
+    wallet.create_account("Asha")
+    wallet.create_account("Ravi")
+    results = wallet.search_accounts(
+        "%' OR 1=1 --", admin_token="test-admin-token"
+    )
+    assert results == []
+
+
 def test_history_lists_deposits_newest_first(wallet: Wallet) -> None:
     account = wallet.create_account("Asha")
     for amount in (100, 200, 300):
